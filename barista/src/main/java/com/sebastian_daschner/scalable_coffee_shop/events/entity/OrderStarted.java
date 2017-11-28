@@ -1,28 +1,33 @@
 package com.sebastian_daschner.scalable_coffee_shop.events.entity;
 
-import javax.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.time.Instant;
 import java.util.UUID;
 
 public class OrderStarted extends CoffeeEvent {
 
-    private final UUID orderId;
+	private final UUID orderId;
 
-    public OrderStarted(final UUID orderId) {
-        this.orderId = orderId;
-    }
+	public OrderStarted(final UUID orderId) {
 
-    public OrderStarted(final UUID orderId, final Instant instant) {
-        super(instant);
-        this.orderId = orderId;
-    }
+		this.orderId = orderId;
+	}
 
-    public OrderStarted(final JsonObject jsonObject) {
-        this(UUID.fromString(jsonObject.getString("orderId")), Instant.parse(jsonObject.getString("instant")));
-    }
+	public OrderStarted(final UUID orderId, final Instant instant) {
 
-    public UUID getOrderId() {
-        return orderId;
-    }
+		super(instant);
+		this.orderId = orderId;
+	}
+
+	public OrderStarted(final JsonNode jsonObject) {
+
+		this(UUID.fromString(jsonObject.get("orderId").asText()), Instant.parse(jsonObject.get("instant").asText()));
+	}
+
+	public UUID getOrderId() {
+
+		return orderId;
+	}
 
 }

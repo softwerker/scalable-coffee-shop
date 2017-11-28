@@ -2,37 +2,39 @@ package com.sebastian_daschner.scalable_coffee_shop.beans.control;
 
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.BeansFetched;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.BeansStored;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.enterprise.event.Observes;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Singleton
-@Startup
-@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
+@Component
+//@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class BeanStorage {
 
-    private Map<String, Integer> beanOrigins = new ConcurrentHashMap<>();
+	private Map<String, Integer> beanOrigins = new ConcurrentHashMap<>();
 
-    public Map<String, Integer> getStoredBeans() {
-        return Collections.unmodifiableMap(beanOrigins);
-    }
+	public Map<String, Integer> getStoredBeans() {
 
-    public int getRemainingAmount(final String beanOrigin) {
-        return beanOrigins.getOrDefault(beanOrigin, 0);
-    }
+		return Collections.unmodifiableMap(beanOrigins);
+	}
 
-    public void apply(@Observes BeansStored beansStored) {
-        beanOrigins.merge(beansStored.getBeanOrigin(), beansStored.getAmount(), Math::addExact);
-    }
+	public int getRemainingAmount(final String beanOrigin) {
 
-    public void apply(@Observes BeansFetched beansFetched) {
-        beanOrigins.merge(beansFetched.getBeanOrigin(), 0, (i1, i2) -> i1 - 1);
-    }
+		return beanOrigins.getOrDefault(beanOrigin, 0);
+	}
+
+	@EventListener
+	public void onApplicationEvent(final BeansStored beansStored) {
+
+		beanOrigins.merge(beansStored.getBeanOrigin(), beansStored.getAmount(), Math::addExact);
+	}
+
+	@EventListener
+	public void onApplicationEvent(final BeansFetched beansFetched) {
+
+		beanOrigins.merge(beansFetched.getBeanOrigin(), 0, (i1, i2) -> i1 - 1);
+	}
 
 }

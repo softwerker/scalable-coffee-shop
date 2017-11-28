@@ -1,39 +1,55 @@
 package com.sebastian_daschner.scalable_coffee_shop.events.entity;
 
-import javax.json.bind.annotation.JsonbProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.context.ApplicationEvent;
+
 import java.time.Instant;
 import java.util.Objects;
 
-public abstract class CoffeeEvent {
+@JsonIgnoreProperties({"source", "timestamp"})
+public abstract class CoffeeEvent extends ApplicationEvent {
 
-    @JsonbProperty
-    private final Instant instant;
+	private final Instant instant;
 
-    protected CoffeeEvent() {
-        instant = Instant.now();
-    }
+	protected CoffeeEvent() {
 
-    protected CoffeeEvent(final Instant instant) {
-        Objects.requireNonNull(instant);
-        this.instant = instant;
-    }
+		super("dummy");
 
-    public Instant getInstant() {
-        return instant;
-    }
+		instant = Instant.now();
+	}
 
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final CoffeeEvent that = (CoffeeEvent) o;
+	protected CoffeeEvent(final Instant instant) {
 
-        return instant.equals(that.instant);
-    }
+		super("dummy");
 
-    @Override
-    public int hashCode() {
-        return instant.hashCode();
-    }
+		Objects.requireNonNull(instant);
+		this.instant = instant;
+	}
+
+	public Instant getInstant() {
+
+		return instant;
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		final CoffeeEvent that = (CoffeeEvent) o;
+
+		return instant.equals(that.instant);
+	}
+
+	@Override
+	public int hashCode() {
+
+		return instant.hashCode();
+	}
 
 }

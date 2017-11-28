@@ -1,54 +1,58 @@
 package com.sebastian_daschner.scalable_coffee_shop.barista.control;
 
 import com.sebastian_daschner.scalable_coffee_shop.events.control.EventConsumer;
-import com.sebastian_daschner.scalable_coffee_shop.events.entity.CoffeeEvent;
+import com.sebastian_daschner.scalable_coffee_shop.events.control.KafkaConfigurator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.event.Event;
-import javax.inject.Inject;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-@Startup
-@Singleton
+@Component
 public class BaristaUpdateConsumer {
 
-    private EventConsumer eventConsumer;
+	private EventConsumer externalEventConsumer;
 
-    @Resource
-    ManagedExecutorService mes;
+	// TODO
+	@Autowired
+	private ThreadPoolTaskExecutor mes;
 
-    @Inject
-    Properties kafkaProperties;
+	@Autowired
+	private KafkaConfigurator kafkaConfigurator;
 
-    @Inject
-    Event<CoffeeEvent> events;
+	@Autowired
+	private ApplicationEventPublisher internalEventPublisher;
 
-    @Inject
-    Logger logger;
+	private static final Logger logger = Logger.getLogger(BaristaUpdateConsumer.class.getName());
 
-    @PostConstruct
-    private void init() {
-        kafkaProperties.put("group.id", "barista-consumer-" + UUID.randomUUID());
-        String barista = kafkaProperties.getProperty("barista.topic");
+	@PostConstruct
+	private void initConsumer() {
 
-        eventConsumer = new EventConsumer(kafkaProperties, ev -> {
-            logger.info("firing = " + ev);
-            events.fire(ev);
-        }, barista);
+		kafkaProperties().put("group.id", "barista-consumer-" + UUID.randomUUID());
+		String barista = kafkaProperties().getProperty("barista.topic");
 
-        mes.execute(eventConsumer);
-    }
+		externalEventConsumer = new EventConsumer(kafkaProperties(), coffeeEvent -> {
+			logger.info("firing internally: " + coffeeEvent);
+			internalEventPublisher.publishEvent(coffeeEvent);
+		}, barista);
 
-    @PreDestroy
-    public void close() {
-        eventConsumer.stop();
-    }
+		mes.execute(externalEventConsumer);
+	}
+
+	@PreDestroy
+	public void close() {
+
+		externalEventConsumer.stop();
+	}
+
+	private Properties kafkaProperties() {
+
+		return kafkaConfigurator.getProperties();
+	}
 
 }

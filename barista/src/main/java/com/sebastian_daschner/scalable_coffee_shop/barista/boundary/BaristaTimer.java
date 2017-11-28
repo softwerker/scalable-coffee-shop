@@ -1,25 +1,27 @@
 package com.sebastian_daschner.scalable_coffee_shop.barista.boundary;
 
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-@Singleton
-@Startup
+@Component
 public class BaristaTimer {
 
-    @Inject
-    BaristaCommandService baristaService;
+	@Autowired
+	BaristaCommandService baristaService;
 
-    @Schedule(second = "7/7", minute = "*", hour = "*", persistent = false)
-    void checkCoffee() {
-        baristaService.checkCoffee();
-    }
+	//@Scheduled(cron = "7/7 * * * * *")
+	@Scheduled(initialDelay = 7000, fixedDelay = 7000)
+	void checkCoffee() {
 
-    @Schedule(second = "8/8", minute = "*", hour = "*", persistent = false)
-    void checkCustomerDelivery() {
-        baristaService.checkCustomerDelivery();
-    }
+		baristaService.checkCoffee();
+	}
+
+	//@Scheduled(cron = "8/8 * * * * *")
+	@Scheduled(initialDelay = 8000, fixedDelay = 8000)
+	void checkCustomerDelivery() {
+
+		baristaService.checkCustomerDelivery();
+	}
 
 }

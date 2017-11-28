@@ -1,28 +1,33 @@
 package com.sebastian_daschner.scalable_coffee_shop.events.entity;
 
-import javax.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.time.Instant;
 
 public class BeansFetched extends CoffeeEvent {
 
-    private final String beanOrigin;
+	private final String beanOrigin;
 
-    public BeansFetched(final String beanOrigin) {
-        this.beanOrigin = beanOrigin;
-    }
+	public BeansFetched(final String beanOrigin) {
 
-    public BeansFetched(final String beanOrigin, final Instant instant) {
-        super(instant);
-        this.beanOrigin = beanOrigin;
-    }
+		this.beanOrigin = beanOrigin;
+	}
 
-    public BeansFetched(final JsonObject jsonObject) {
-        this(jsonObject.getString("beanOrigin"), Instant.parse(jsonObject.getString("instant")));
+	public BeansFetched(final String beanOrigin, final Instant instant) {
 
-    }
+		super(instant);
+		this.beanOrigin = beanOrigin;
+	}
 
-    public String getBeanOrigin() {
-        return beanOrigin;
-    }
+	public BeansFetched(final JsonNode jsonObject) {
+
+		this(jsonObject.get("beanOrigin").asText(), Instant.parse(jsonObject.get("instant").asText()));
+
+	}
+
+	public String getBeanOrigin() {
+
+		return beanOrigin;
+	}
 
 }

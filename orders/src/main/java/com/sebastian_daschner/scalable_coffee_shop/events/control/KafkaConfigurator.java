@@ -1,33 +1,25 @@
 package com.sebastian_daschner.scalable_coffee_shop.events.control;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.Properties;
 
-@ApplicationScoped
+@Component
 public class KafkaConfigurator {
 
-    private Properties kafkaProperties;
+	private final Properties properties;
 
-    @PostConstruct
-    private void initProperties() {
-        try {
-            kafkaProperties = new Properties();
-            kafkaProperties.load(KafkaConfigurator.class.getResourceAsStream("/kafka.properties"));
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
+	public KafkaConfigurator() throws IOException {
 
-    @Produces
-    @RequestScoped
-    public Properties exposeKafkaProperties() throws IOException {
-        final Properties properties = new Properties();
-        properties.putAll(kafkaProperties);
-        return properties;
-    }
+		properties = PropertiesLoaderUtils.loadProperties(
+				new ClassPathResource("/kafka.properties"));
+	}
 
+	public Properties getProperties() {
+
+		return properties;
+	}
 }

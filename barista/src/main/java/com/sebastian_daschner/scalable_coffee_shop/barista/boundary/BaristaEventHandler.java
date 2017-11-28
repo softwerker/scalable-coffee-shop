@@ -1,56 +1,67 @@
 package com.sebastian_daschner.scalable_coffee_shop.barista.boundary;
 
 import com.sebastian_daschner.scalable_coffee_shop.events.control.EventConsumer;
-import com.sebastian_daschner.scalable_coffee_shop.events.entity.CoffeeEvent;
+import com.sebastian_daschner.scalable_coffee_shop.events.control.KafkaConfigurator;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.OrderAccepted;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.event.Event;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
+import javax.annotation.PreDestroy;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-@Singleton
-@Startup
+@Component
 public class BaristaEventHandler {
 
-    private EventConsumer eventConsumer;
+	private EventConsumer externalEventConsumer;
 
-    @Resource
-    ManagedExecutorService mes;
+	// TODO
+	@Autowired
+	private ThreadPoolTaskExecutor mes;
 
-    @Inject
-    Properties kafkaProperties;
+	@Autowired
+	private KafkaConfigurator kafkaConfigurator;
 
-    @Inject
-    Event<CoffeeEvent> events;
+	@Autowired
+	private ApplicationEventPublisher internalEventPublisher;
 
-    @Inject
-    BaristaCommandService baristaService;
+	@Autowired
+	BaristaCommandService baristaService;
 
-    @Inject
-    Logger logger;
+	private static final Logger logger = Logger.getLogger(BaristaEventHandler.class.getName());
 
-    public void handle(@Observes OrderAccepted event) {
-        baristaService.makeCoffee(event.getOrderInfo());
-    }
+	@EventListener
+	public void onApplicationEvent(final OrderAccepted event) {
 
-    @PostConstruct
-    private void initConsumer() {
-        kafkaProperties.put("group.id", "barista-handler");
-        String orders = kafkaProperties.getProperty("orders.topic");
+		baristaService.makeCoffee(event.getOrderInfo());
+	}
 
-        eventConsumer = new EventConsumer(kafkaProperties, ev -> {
-            logger.info("firing = " + ev);
-            events.fire(ev);
-        }, orders);
+	@PostConstruct
+	private void initConsumer() {
 
-        mes.execute(eventConsumer);
-    }
+		kafkaProperties().put("group.id", "barista-handler");
+		String orders = kafkaProperties().getProperty("orders.topic");
 
+		externalEventConsumer = new EventConsumer(kafkaProperties(), coffeeEvent -> {
+			logger.info("firing = " + coffeeEvent);
+			internalEventPublisher.publishEvent(coffeeEvent);
+		}, orders);
+
+		mes.execute(externalEventConsumer);
+	}
+
+	@PreDestroy
+	public void close() {
+
+		externalEventConsumer.stop();
+	}
+
+	private Properties kafkaProperties() {
+
+		return kafkaConfigurator.getProperties();
+	}
 }

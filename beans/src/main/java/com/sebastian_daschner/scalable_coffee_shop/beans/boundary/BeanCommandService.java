@@ -6,31 +6,37 @@ import com.sebastian_daschner.scalable_coffee_shop.events.entity.BeansFetched;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.BeansStored;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.OrderBeansValidated;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.OrderFailedBeansNotAvailable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
 import java.util.UUID;
 
+@Component
 public class BeanCommandService {
 
-    @Inject
-    EventProducer eventProducer;
+	@Autowired
+	EventProducer externalEventProducer;
 
-    @Inject
-    BeanStorage beanStorage;
+	@Autowired
+	BeanStorage beanStorage;
 
-    public void storeBeans(final String beanOrigin, final int amount) {
-        eventProducer.publish(new BeansStored(beanOrigin, amount));
-    }
+	public void storeBeans(final String beanOrigin, final int amount) {
 
-    void validateBeans(final String beanOrigin, final UUID orderId) {
-        if (beanStorage.getRemainingAmount(beanOrigin) > 0)
-            eventProducer.publish(new OrderBeansValidated(orderId));
-        else
-            eventProducer.publish(new OrderFailedBeansNotAvailable(orderId));
-    }
+		externalEventProducer.publish(new BeansStored(beanOrigin, amount));
+	}
 
-    void fetchBeans(final String beanOrigin) {
-        eventProducer.publish(new BeansFetched(beanOrigin));
-    }
+	void validateBeans(final String beanOrigin, final UUID orderId) {
+
+		if (beanStorage.getRemainingAmount(beanOrigin) > 0) {
+			externalEventProducer.publish(new OrderBeansValidated(orderId));
+		} else {
+			externalEventProducer.publish(new OrderFailedBeansNotAvailable(orderId));
+		}
+	}
+
+	void fetchBeans(final String beanOrigin) {
+
+		externalEventProducer.publish(new BeansFetched(beanOrigin));
+	}
 
 }

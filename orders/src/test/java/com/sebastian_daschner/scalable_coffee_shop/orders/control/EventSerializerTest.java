@@ -14,23 +14,25 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class EventSerializerTest {
 
-    @Parameterized.Parameter
-    public String expected;
+	@Parameterized.Parameter
+	public String expected;
 
-    @Parameterized.Parameter(1)
-    public CoffeeEvent event;
+	@Parameterized.Parameter(1)
+	public CoffeeEvent event;
 
-    private EventSerializer cut = new EventSerializer();
+	private EventSerializer cut = new EventSerializer();
 
-    @Test
-    public void test() {
-        final String actual = new String(cut.serialize(null, event), StandardCharsets.UTF_8);
-        assertEquals(expected, actual);
-    }
+	@Test
+	public void test() {
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> testData() {
-        return TestData.eventTestData();
-    }
+		final String actual = new String(cut.serialize(null, event), StandardCharsets.UTF_8);
+		assertEquals(expected, actual);
+	}
+
+	@Parameterized.Parameters
+	public static Collection<Object[]> testData() {
+
+		return TestData.eventTestData();
+	}
 
 }
