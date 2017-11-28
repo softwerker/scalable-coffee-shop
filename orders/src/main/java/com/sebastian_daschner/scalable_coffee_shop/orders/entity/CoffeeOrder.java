@@ -4,49 +4,58 @@ import com.sebastian_daschner.scalable_coffee_shop.events.entity.OrderInfo;
 
 public class CoffeeOrder {
 
-    private CoffeeOrderState state;
-    private OrderInfo orderInfo;
+	private CoffeeOrderState state;
 
-    public void place(final OrderInfo orderInfo) {
-        state = CoffeeOrderState.PLACED;
-        this.orderInfo = orderInfo;
-    }
+	private OrderInfo orderInfo;
 
-    public void accept() {
-        state = CoffeeOrderState.ACCEPTED;
-    }
+	public void place(final OrderInfo orderInfo) {
 
-    public void cancel() {
-        state = CoffeeOrderState.CANCELLED;
-    }
+		state = CoffeeOrderState.PLACED;
+		this.orderInfo = orderInfo;
+	}
 
-    public void start() {
-        state = CoffeeOrderState.STARTED;
-    }
+	public void accept() {
 
-    public void finish() {
-        state = CoffeeOrderState.FINISHED;
-    }
+		state = CoffeeOrderState.ACCEPTED;
+	}
 
-    public void deliver() {
-        state = CoffeeOrderState.DELIVERED;
-    }
+	public void cancel() {
 
-    public CoffeeOrderState getState() {
-        return state;
-    }
+		state = CoffeeOrderState.CANCELLED;
+	}
 
-    public OrderInfo getOrderInfo() {
-        return orderInfo;
-    }
+	public void start() {
 
-    public enum CoffeeOrderState {
-        PLACED,
-        ACCEPTED,
-        STARTED,
-        FINISHED,
-        DELIVERED,
-        CANCELLED
-    }
+		state = CoffeeOrderState.STARTED;
+	}
+
+	public void finish() {
+
+		state = CoffeeOrderState.FINISHED;
+	}
+
+	public void deliver() {
+
+		state = CoffeeOrderState.DELIVERED;
+	}
+
+	public CoffeeOrderState getState() {
+
+		return state;
+	}
+
+	public OrderInfo getOrderInfo() {
+
+		return orderInfo;
+	}
+
+	public enum CoffeeOrderState {
+		PLACED,
+		ACCEPTED,
+		STARTED,
+		FINISHED,
+		DELIVERED,
+		CANCELLED
+	}
 
 }

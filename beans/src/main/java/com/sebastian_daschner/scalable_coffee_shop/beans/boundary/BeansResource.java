@@ -1,40 +1,57 @@
 package com.sebastian_daschner.scalable_coffee_shop.beans.boundary;
 
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Path("beans")
+@RestController
+@RequestMapping("beans")
 public class BeansResource {
 
-    @Inject
-    BeanCommandService commandService;
+	private static final Logger logger = LoggerFactory.getLogger(BeansResource.class);
 
-    @Inject
-    BeanQueryService queryService;
+	@Autowired
+	BeanCommandService commandService;
 
-    @GET
-    public JsonObject getBeans() {
-        final JsonObjectBuilder builder = Json.createObjectBuilder();
-        queryService.getStoredBeans()
-                .entrySet().forEach(e -> builder.add(e.getKey(), e.getValue()));
-        return builder.build();
-    }
+	@Autowired
+	BeanQueryService queryService;
 
-    @POST
-    public void storeBeans(JsonObject object) {
-        final String beanOrigin = object.getString("beanOrigin", null);
-        final int amount = object.getInt("amount", 0);
+	@GetMapping
+	public ResponseEntity<JsonNode> getBeans() {
 
-        if (beanOrigin == null || amount == 0)
-            throw new BadRequestException();
+		final ObjectNode jsonObject = JsonNodeFactory.instance.objectNode();
 
-        commandService.storeBeans(beanOrigin, amount);
-    }
+		queryService.getStoredBeans()
+				.forEach((beanName, stock) -> {
+					jsonObject.put(beanName, stock);
+				});
+
+		return ResponseEntity.ok(jsonObject);
+	}
+
+	@PostMapping
+	public ResponseEntity<Object> storeBeans(final JsonNode jsonObject) {
+
+		logger.info("received: {}", jsonObject);
+
+		final String beanOrigin = jsonObject.get("beanOrigin").asText();
+		final int amount = jsonObject.get("amount").asInt();
+
+		if (beanOrigin == null || amount == 0) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		commandService.storeBeans(beanOrigin, amount);
+
+		return ResponseEntity.accepted().build();
+	}
 
 }

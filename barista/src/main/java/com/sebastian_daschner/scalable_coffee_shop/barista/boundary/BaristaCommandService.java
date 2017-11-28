@@ -6,44 +6,50 @@ import com.sebastian_daschner.scalable_coffee_shop.events.entity.CoffeeBrewFinis
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.CoffeeBrewStarted;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.CoffeeDelivered;
 import com.sebastian_daschner.scalable_coffee_shop.events.entity.OrderInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import javax.inject.Inject;
 import java.util.Collection;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+@Component
 public class BaristaCommandService {
 
-    @Inject
-    EventProducer eventProducer;
+	@Autowired
+	EventProducer externalEventProducer;
 
-    @Inject
-    CoffeeBrews coffeeBrews;
+	@Autowired
+	CoffeeBrews coffeeBrews;
 
-    @Inject
-    Logger logger;
+	private static final Logger logger = Logger.getLogger(BaristaCommandService.class.getName());
 
-    void makeCoffee(final OrderInfo orderInfo) {
-        eventProducer.publish(new CoffeeBrewStarted(orderInfo));
-    }
+	void makeCoffee(final OrderInfo orderInfo) {
 
-    void checkCoffee() {
-        final Collection<UUID> unfinishedBrews = coffeeBrews.getUnfinishedBrews();
-        logger.info("checking " + unfinishedBrews.size() + " unfinished brews");
-        unfinishedBrews.forEach(i -> {
-            if (new Random().nextBoolean())
-                eventProducer.publish(new CoffeeBrewFinished(i));
-        });
-    }
+		externalEventProducer.publish(new CoffeeBrewStarted(orderInfo));
+	}
 
-    void checkCustomerDelivery() {
-        final Collection<UUID> undeliveredOrder = coffeeBrews.getUndeliveredOrders();
-        logger.info("checking " + undeliveredOrder.size() + " un-served orders");
-        undeliveredOrder.forEach(i -> {
-            if (new Random().nextBoolean())
-                eventProducer.publish(new CoffeeDelivered(i));
-        });
-    }
+	void checkCoffee() {
+
+		final Collection<UUID> unfinishedBrews = coffeeBrews.getUnfinishedBrews();
+		logger.info("checking " + unfinishedBrews.size() + " unfinished brews");
+		unfinishedBrews.forEach(i -> {
+			if (new Random().nextBoolean()) {
+				externalEventProducer.publish(new CoffeeBrewFinished(i));
+			}
+		});
+	}
+
+	void checkCustomerDelivery() {
+
+		final Collection<UUID> undeliveredOrder = coffeeBrews.getUndeliveredOrders();
+		logger.info("checking " + undeliveredOrder.size() + " un-served orders");
+		undeliveredOrder.forEach(i -> {
+			if (new Random().nextBoolean()) {
+				externalEventProducer.publish(new CoffeeDelivered(i));
+			}
+		});
+	}
 
 }

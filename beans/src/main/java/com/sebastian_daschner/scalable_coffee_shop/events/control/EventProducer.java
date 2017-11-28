@@ -6,53 +6,61 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.errors.ProducerFencedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-@ApplicationScoped
+@Component
 public class EventProducer {
 
-    private Producer<String, CoffeeEvent> producer;
-    private String topic;
+	private Producer<String, CoffeeEvent> kafkaProducer;
 
-    @Inject
-    Properties kafkaProperties;
+	private String topic;
 
-    @Inject
-    Logger logger;
+	@Autowired
+	private KafkaConfigurator kafkaConfigurator;
 
-    @PostConstruct
-    private void init() {
-        kafkaProperties.put("transactional.id", UUID.randomUUID().toString());
-        producer = new KafkaProducer<>(kafkaProperties);
-        topic = kafkaProperties.getProperty("beans.topic");
-        producer.initTransactions();
-    }
+	private static final Logger logger = Logger.getLogger(EventProducer.class.getName());
 
-    public void publish(CoffeeEvent event) {
-        final ProducerRecord<String, CoffeeEvent> record = new ProducerRecord<>(topic, event);
-        try {
-            producer.beginTransaction();
-            logger.info("publishing = " + record);
-            producer.send(record);
-            producer.commitTransaction();
-        } catch (ProducerFencedException e) {
-            producer.close();
-        } catch (KafkaException e) {
-            producer.abortTransaction();
-        }
-    }
+	@PostConstruct
+	private void initProducer() {
 
-    @PreDestroy
-    public void close() {
-        producer.close();
-    }
+		kafkaProperties().put("transactional.id", UUID.randomUUID().toString());
+		kafkaProducer = new KafkaProducer<>(kafkaProperties());
+		topic = kafkaProperties().getProperty("beans.topic");
+		kafkaProducer.initTransactions();
+	}
+
+	public void publish(CoffeeEvent event) {
+
+		final ProducerRecord<String, CoffeeEvent> record = new ProducerRecord<>(topic, event);
+		try {
+			kafkaProducer.beginTransaction();
+			logger.info("publishing = " + record);
+			kafkaProducer.send(record);
+			kafkaProducer.commitTransaction();
+		} catch (ProducerFencedException e) {
+			kafkaProducer.close();
+		} catch (KafkaException e) {
+			kafkaProducer.abortTransaction();
+		}
+	}
+
+	@PreDestroy
+	public void close() {
+
+		kafkaProducer.close();
+	}
+
+	private Properties kafkaProperties() {
+
+		return kafkaConfigurator.getProperties();
+	}
 
 }
 

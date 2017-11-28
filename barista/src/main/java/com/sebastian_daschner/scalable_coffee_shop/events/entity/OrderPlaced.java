@@ -1,27 +1,32 @@
 package com.sebastian_daschner.scalable_coffee_shop.events.entity;
 
-import javax.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.time.Instant;
 
 public class OrderPlaced extends CoffeeEvent {
 
-    private final OrderInfo orderInfo;
+	private final OrderInfo orderInfo;
 
-    public OrderPlaced(final OrderInfo orderInfo) {
-        this.orderInfo = orderInfo;
-    }
+	public OrderPlaced(final OrderInfo orderInfo) {
 
-    public OrderPlaced(final OrderInfo orderInfo, Instant instant) {
-        super(instant);
-        this.orderInfo = orderInfo;
-    }
+		this.orderInfo = orderInfo;
+	}
 
-    public OrderPlaced(JsonObject jsonObject) {
-        this(new OrderInfo(jsonObject.getJsonObject("orderInfo")), Instant.parse(jsonObject.getString("instant")));
-    }
+	public OrderPlaced(final OrderInfo orderInfo, Instant instant) {
 
-    public OrderInfo getOrderInfo() {
-        return orderInfo;
-    }
+		super(instant);
+		this.orderInfo = orderInfo;
+	}
+
+	public OrderPlaced(final JsonNode jsonObject) {
+
+		this(new OrderInfo(jsonObject.get("orderInfo")), Instant.parse(jsonObject.get("instant").asText()));
+	}
+
+	public OrderInfo getOrderInfo() {
+
+		return orderInfo;
+	}
 
 }
